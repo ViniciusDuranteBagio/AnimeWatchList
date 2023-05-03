@@ -1,0 +1,49 @@
+version: '3.7'
+
+volumes:
+    logs:
+        driver: local
+
+services:
+    slim:
+        container_name: "watchlist_web"
+        build: .
+        working_dir: /var/www
+        command: php -S 0.0.0.0:8080 -t public
+        environment:
+            docker: "true"
+        ports:
+            - "8080:8080"
+        networks:
+            watchlist_network:
+                ipv4_address: 192.168.151.51    
+        volumes:
+            - .:/var/www
+            - logs:/var/www/logs
+        extra_hosts:
+          - 'watchlist:127.0.0.1'
+        depends_on:
+          - mariadb
+    mariadb:
+        container_name: "watchlist_db" 
+        image: mariadb:latest
+        restart: always 
+        networks:
+            watchlist_network:
+                ipv4_address: 192.168.151.50
+        volumes:
+          - ./.docker/mariadb/data:/var/lib/mariadb
+        environment:
+          MYSQL_ROOT_PASSWORD: 'root'
+          MYSQL_USER: 'root'
+          MYSQL_PASSWORD: 'watchlist'
+          MYSQL_DATABASE: 'watchlist'
+        ports:
+          - 3306:3306   
+networks:
+  watchlist_network:
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.151.0/24
+        
